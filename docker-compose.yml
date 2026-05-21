@@ -3,7 +3,20 @@ services:
     image: nousresearch/hermes-agent:latest
     container_name: hermes
     restart: unless-stopped
-    command: gateway run
+    # Wrap the upstream entrypoint to pre-create /opt/data/whatsapp with the
+    # right ownership. Without this the Baileys bridge creates it as root and
+    # the gateway (running as user `hermes`) cannot read its own session.
+    # See: nousresearch/hermes-agent docker/entrypoint.sh — `whatsapp/` is the
+    # only platform dir not in the upfront mkdir set.
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        mkdir -p /opt/data/whatsapp/session
+        chown -R hermes:hermes /opt/data/whatsapp
+        exec /usr/bin/tini -g -- /opt/hermes/docker/entrypoint.sh "$$@"
+      - --
+    command: ["gateway", "run"]
     stdin_open: true
     tty: true
     ports:
