@@ -14,6 +14,7 @@ services:
       - |
         mkdir -p /opt/data/whatsapp/session
         chown -R hermes:hermes /opt/data/whatsapp
+        ln -sf /opt/hermes/.venv/bin/hermes /usr/local/bin/hermes
         exec /usr/bin/tini -g -- /opt/hermes/docker/entrypoint.sh "$$@"
       - --
     command: ["gateway", "run"]
